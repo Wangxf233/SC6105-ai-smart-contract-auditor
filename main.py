@@ -1,18 +1,18 @@
 import os
 import sys
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings, OpenAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 
 # Load environment variables from the .env file
 load_dotenv()
 
-def get_openai_api_key():
-    """Fetches the OpenAI API key from environment variables."""
-    api_key = os.getenv("OPENAI_API_KEY")
+def get_google_api_key():
+    """Fetches the Google API key from environment variables."""
+    api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
-        raise ValueError("OPENAI_API_KEY not found in .env file or environment variables.")
+        raise ValueError("GOOGLE_API_KEY not found in .env file or environment variables.")
     return api_key
 
 def initialize_qa_chain(index_path="faiss_index"):
@@ -25,15 +25,15 @@ def initialize_qa_chain(index_path="faiss_index"):
 
     print("Loading the knowledge base (this might take a moment)...")
     try:
-        api_key = get_openai_api_key()
-        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        api_key = get_google_api_key()
+        embeddings = GoogleGenerativeAIEmbeddings(google_api_key=api_key, model="models/embedding-001")
         
         # Load the vector store from the local disk
         vector_store = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
         
         # Create the Question-Answering chain
         qa_chain = RetrievalQA.from_chain_type(
-            llm=OpenAI(temperature=0, openai_api_key=api_key),
+            llm=ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0, google_api_key=api_key),
             chain_type="stuff",
             retriever=vector_store.as_retriever(),
             return_source_documents=True

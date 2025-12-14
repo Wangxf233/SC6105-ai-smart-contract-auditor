@@ -2,19 +2,19 @@ import os
 from dotenv import load_dotenv
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from src.knowledge_loader import load_knowledge_from_directory
 from src.logger_config import logger
 
 # Load environment variables from the .env file
 load_dotenv()
 
-def get_openai_api_key():
-    """Fetches the OpenAI API key from environment variables."""
-    api_key = os.getenv("OPENAI_API_KEY")
+def get_google_api_key():
+    """Fetches the Google API key from environment variables."""
+    api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
-        logger.error("OPENAI_API_KEY not found in .env file or environment variables.")
-        raise ValueError("OPENAI_API_KEY not found in .env file or environment variables.")
+        logger.error("GOOGLE_API_KEY not found in .env file or environment variables.")
+        raise ValueError("GOOGLE_API_KEY not found in .env file or environment variables.")
     return api_key
 
 def build_and_save_vector_store(docs, index_path="faiss_index"):
@@ -40,17 +40,17 @@ def build_and_save_vector_store(docs, index_path="faiss_index"):
     )
     chunks = text_splitter.split_documents(langchain_docs)
     logger.info(f"Split {len(langchain_docs)} documents into {len(chunks)} chunks.")
-
+    
     # 3. Create embeddings for the chunks and build the FAISS vector store.
     logger.info("Creating embeddings and building the FAISS index. This may take a few moments...")
     try:
-        api_key = get_openai_api_key()
-        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        api_key = get_google_api_key()
+        embeddings = GoogleGenerativeAIEmbeddings(google_api_key=api_key, model="models/embedding-001")
         vector_store = FAISS.from_documents(chunks, embeddings)
     except Exception as e:
         logger.critical(f"Failed to create embeddings or build FAISS index: {e}", exc_info=True)
         return
-
+    
     # 4. Save the vector store locally for future use.
     vector_store.save_local(index_path)
     logger.info(f"Vector store successfully built and saved to '{index_path}'")

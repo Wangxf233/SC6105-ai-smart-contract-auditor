@@ -3,6 +3,7 @@ Environment variables - NEVER commit this file!
 
 Python virtual environment
 venv/
+.venv/
 
 Python cache files
 pycache/
@@ -13,3 +14,13 @@ faiss_index/
 
 Log files
 *.log
+
+
+__pycache__/
+
+.env.local
+
+
+# IDE 配置文件（可选，根据你用的工具添加）
+.idea/
+.vscode/

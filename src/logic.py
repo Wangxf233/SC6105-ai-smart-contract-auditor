@@ -2,7 +2,7 @@ import os
 import re
 import streamlit as st
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings, OpenAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
@@ -12,12 +12,12 @@ from src.logger_config import logger
 # Load environment variables from the .env file
 load_dotenv()
 
-def get_openai_api_key():
-    """Fetches the OpenAI API key from environment variables."""
-    api_key = os.getenv("OPENAI_API_KEY")
+def get_google_api_key():
+    """Fetches the Google API key from environment variables."""
+    api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
-        logger.error("OPENAI_API_KEY not found in .env file or environment variables.")
-        raise ValueError("OPENAI_API_KEY not found.")
+        logger.error("GOOGLE_API_KEY not found in .env file or environment variables.")
+        raise ValueError("GOOGLE_API_KEY not found.")
     return api_key
 
 @st.cache_resource
@@ -32,8 +32,8 @@ def initialize_qa_chain(index_path="faiss_index"):
         return None
     
     try:
-        api_key = get_openai_api_key()
-        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        api_key = get_google_api_key()
+        embeddings = GoogleGenerativeAIEmbeddings(google_api_key=api_key, model="models/embedding-001")
         vector_store = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
         logger.info("FAISS index loaded successfully.")
         
@@ -63,7 +63,7 @@ def initialize_qa_chain(index_path="faiss_index"):
         PROMPT = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
         
         qa_chain = RetrievalQA.from_chain_type(
-            llm=OpenAI(temperature=0, openai_api_key=api_key),
+            llm=ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0, google_api_key=api_key),
             chain_type="stuff",
             retriever=vector_store.as_retriever(search_kwargs={"k": 5}),
             return_source_documents=True,
